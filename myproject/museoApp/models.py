@@ -4,13 +4,13 @@ from django.db import models
 
 
 class Museo(models.Model):
-    ID = models.IntegerField(max_length=32)
+    idMuseo = models.IntegerField()
     nombre = models.CharField(max_length=128)
     descripcion = models.TextField()
     horario = models.TextField()
     transporte = models.TextField()
     accesibilidad = models.BinaryField()    #django models
-    url = URLField()
+    url = models.URLField()
     distrito = models.CharField(max_length=32)
     email = models.EmailField(max_length=64)
 

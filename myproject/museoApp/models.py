@@ -9,14 +9,18 @@ class Museo(models.Model):
     descripcion = models.TextField()
     horario = models.TextField()
     transporte = models.TextField()
-    accesibilidad = models.BinaryField()    #django models
+    accesibilidad = models.IntegerField()    #django models
     url = models.URLField()
     distrito = models.CharField(max_length=32)
     email = models.EmailField(max_length=64)
+    def __str__(self):
+        return self.nombre
 
 class Content_User(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.CharField(max_length=32)
+    def __str__(self):
+        return self.usuario
 
 class Comentario(models.Model):
     museo = models.ForeignKey(Museo)
@@ -28,3 +32,5 @@ class Configuracion(models.Model):
     color = models.CharField(max_length=32)
     titulo = models.CharField(max_length=128)
     usuario = models.CharField(max_length=32)
+    def __str__(self):
+        return self.usuario

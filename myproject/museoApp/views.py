@@ -2,8 +2,28 @@ from django.shortcuts import render
 from urllib.request import urlopen
 import xml.etree.ElementTree as ET
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from .models import *
+from sqlite3 import OperationalError
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Count
 
+formulario_carga = """
+        <form action="/">
+          <h3>CARGAR DATOS:</h3>
+          <input type="submit" value="Cargar museos">
+        </form>
+        """
+formulario_volver = """
+        <form action="/">
+          <input type="submit" value="Página principal">
+        </form>
+        """
+formulario_filtro = """
+        <form action="/filtro" method="POST">
+          <input type="submit" value="Filtrar por accesibilidad">
+        </form>
+        """
 
 def xmlParser(request):
     print("Estoy en parser")
@@ -69,7 +89,7 @@ def xmlParser(request):
 
                     try:
                         accesibilidad = k.find('[@nombre="ACCESIBILIDAD"]').text
-                        if accesibilidad == 0:
+                        if accesibilidad == '0':
                             False;
                         else:
                             True;
@@ -84,5 +104,31 @@ def xmlParser(request):
                       transporte = transporte,  accesibilidad = accesibilidad,
                       url = url, distrito = distrito, email = email)
 
-        #museo.save()
-    #return HttpResponseRedirect('/')
+        museo.save()
+    return HttpResponse(formulario_carga)
+
+@csrf_exempt
+def pagina_principal(request):
+    resp = "<h3>Museos de la ciudad de Madrid:</h3>"
+    if request.method == 'GET':
+        museos_comentados = Museo.objects.annotate(num_com=Count('comentario')).order_by('-num_com')[:5]
+
+        for objeto in museos_comentados:
+            resp += '<li><a href="/' + str(objeto.nombre) + '">' + objeto.nombre + '</a>'
+            resp += "</ul>"
+        return HttpResponse(resp + formulario_filtro)
+
+@csrf_exempt
+def filtro_accesibilidad(request):
+    if request.method == 'POST':
+        resp = "<h3>Museos de la ciudad de Madrid:</h3>"
+        museos_accesibles = Museo.objects.filter(accesibilidad=1)[:5]
+        for objeto in museos_accesibles:
+            resp += '<li><a href="/' + str(objeto.nombre) + '">' + objeto.nombre + '</a>'
+            resp += "</ul>"
+        return HttpResponse(resp + formulario_volver)
+
+def notOption(request, recurso):
+    resp = "No contemplada esta opción."
+    resp +="Lista opciones:"
+    return HttpResponse(resp)

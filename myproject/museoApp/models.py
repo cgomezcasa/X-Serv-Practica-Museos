@@ -28,4 +28,3 @@ class Configuracion(models.Model):
     color = models.CharField(max_length=32)
     titulo = models.CharField(max_length=128)
     usuario = models.CharField(max_length=32)
-

@@ -5,6 +5,9 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'cargar$', 'museoApp.views.xmlParser'),
     url(r'^$', 'museoApp.views.pagina_principal'),
-    url(r'^filtro$', 'museoApp.views.filtro_accesibilidad'),
+    url(r'^museos$', 'museoApp.views.museos'),
+    url(r'^museo/(\d+)$', 'museoApp.views.museos_id'),
+    url(r'^acceso$', 'museoApp.views.filtro_accesibilidad'),
+    url(r'^distrito$', 'museoApp.views.filtro_distrito'),
     url(r'^(.*)','museoApp.views.notOption')
 ]

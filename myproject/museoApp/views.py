@@ -129,7 +129,7 @@ def pagina_principal(request):
 @csrf_exempt
 def filtro_accesibilidad(request):
     if request.method == 'POST':
-        resp = "<h3>Museos de la ciudad de Madrid accesibles:</h3>"
+        resp = "<h1>Museos de la ciudad de Madrid accesibles:</h1>"
         museos_accesibles = Museo.objects.filter(accesibilidad=1)
         for objeto in museos_accesibles:
             resp += '<li><a href="/' + str(objeto.id) + '">' + objeto.nombre + '</a>'
@@ -137,22 +137,31 @@ def filtro_accesibilidad(request):
         return HttpResponse(resp + formulario_volver)
 
 def museos(request):
-    resp = "<h3>Todos los museos de la ciudad de Madrid:</h3>"
+    resp = "<h1>Todos los museos de la ciudad de Madrid:</h1>"
     museos_lista = Museo.objects.all()
     for objeto in museos_lista:
-        resp += '<li><a href="/museo/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
+        resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
         resp += "</ul>"
     return HttpResponse(formulario_distrito + resp)
 
 @csrf_exempt
 def filtro_distrito(request):
     if request.method == 'POST':
-        resp = "<h3>Museos de la ciudad de Madrid diferenciados por distritos:</h3>"
-        museos_distrito = set(Museo.objects.filter(distrito=new))
-        print(museos_distrito)
-        for objeto in museos_distrito:
-            resp += objeto
+        resp = "<h1>Distritos de la ciudad de Madrid:</h1>"
+        lista_distritos = Museo.objects.values_list('distrito', flat=True).distinct()
+        for objeto in lista_distritos:
+            resp += '<li><a href="/museos/distrito/' + objeto +  '">' + objeto + '</a></br>'
+            resp += "</ul>"
+    return HttpResponse(resp + formulario_volver)
 
+def distrito(request, recurso):
+    distrito_elegido = recurso.split('/')[1]
+    if request.method == 'GET':
+        resp = '<h1>Museos del distrito (' + distrito_elegido + '): </h1>'
+        museos_distritos = Museo.objects.filter(distrito=distrito_elegido)
+        for objeto in museos_distritos:
+            resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
+            resp += "</ul>"
     return HttpResponse(resp + formulario_volver)
 
 def museos_id(request,recurso):
@@ -175,10 +184,7 @@ def museos_id(request,recurso):
         com = "No hay comentarios hasta el momento en este museo."
         resp += com + "</ul>"
     else:
-        print("estoy antes del for")
         for i in comentarios:
-            print("estoy dentro del for")
-            print("i:" + str(i))
             com = i.comentario
             resp += com + '</br>'
         resp += "</ul>"

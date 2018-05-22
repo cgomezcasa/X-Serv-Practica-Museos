@@ -8,6 +8,7 @@ from sqlite3 import OperationalError
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.views import logout
 
 formulario_carga = """
         <form action="/">
@@ -30,6 +31,11 @@ formulario_distrito = """
           <input type="submit" value="Filtrar por distrito">
         </form>
         """
+formulario_seleccion = """
+        <form action="" method="POST">
+          <input type="submit" value="Seleccionar/Deseleccionar museo">
+        </form>
+        """
 
 def xmlParser(request):
     print("Estoy en parser")
@@ -45,26 +51,32 @@ def xmlParser(request):
                 for k in j.iter('atributo'):
                     try:
                         idMuseo = k.find('[@nombre="ID-ENTIDAD"]').text
+                        print(idMuseo)
                     except AttributeError:
                         pass
                     try:
                         nombre = k.find('[@nombre="NOMBRE"]').text
+                        print(nombre)
                     except AttributeError:
                         pass
                     try:
                         descripcion = k.find('[@nombre="DESCRIPCION-ENTIDAD"]').text
+                        print(descripcion)
                     except AttributeError:
                         pass
                     try:
                         horario = k.find('[@nombre="HORARIO"]').text
+                        print(horario)
                     except AttributeError:
                         pass
                     try:
                         transporte = k.find('[@nombre="TRANSPORTE"]').text
+                        print(transporte)
                     except AttributeError:
                         pass
                     try:
                         accesibilidad = k.find('[@nombre="ACCESIBILIDAD"]').text
+                        print(accesibilidad)
                         if accesibilidad == '0':
                             False;
                         else:
@@ -101,15 +113,20 @@ def xmlParser(request):
         museo = Museo(idMuseo = idMuseo, nombre = nombre,
                       descripcion = descripcion, horario = horario,
                       transporte = transporte,  accesibilidad = accesibilidad,
-                      url = url, direccion=direccion, barrio=barrio,
-                      distrito = distrito, telefono=telefono, email = email)
+                      url = url, direccion = direccion, barrio = barrio,
+                      distrito = distrito, telefono = telefono, email = email)
 
         museo.save()
+        
     return HttpResponse(formulario_carga)
 
 def pagina_principal(request):
 
     if request.method == 'GET':
+        if request.user.is_authenticated():
+            sesion = 'Bienvenido: ' + request.user.username + '</br><a href="/logout">Logout</a>'
+        else:
+            sesion = '<li><a href="/login">Login</a>'
         museos_comentados = Museo.objects.annotate(num_com=Count('comentario')).filter(num_com__gte=1).order_by('-num_com')[:5]
         try:
             if museos_comentados[0].id:
@@ -121,10 +138,11 @@ def pagina_principal(request):
 
 
         for objeto in list:
-            resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + '</a></br><a href="/museo/' + str(objeto.id) + '">' + "Más información" + '</a>'
+            resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
+            resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
             resp += "</ul>"
-            #tambien hay que añadir la direccion(objeto.direccion despues de objeto.nombre)
-        return HttpResponse(resp +  formulario_acceso)
+        return HttpResponse(sesion + resp +  formulario_acceso)
+
 
 @csrf_exempt
 def filtro_accesibilidad(request):
@@ -145,25 +163,27 @@ def museos(request):
     return HttpResponse(formulario_distrito + resp)
 
 @csrf_exempt
-def filtro_distrito(request):
+def distrito(request):
     if request.method == 'POST':
         resp = "<h1>Distritos de la ciudad de Madrid:</h1>"
         lista_distritos = Museo.objects.values_list('distrito', flat=True).distinct()
         for objeto in lista_distritos:
-            resp += '<li><a href="/museos/distrito/' + objeto +  '">' + objeto + '</a></br>'
+            resp += '<li><a href="/distrito/' + objeto +  '">' + objeto + '</a></br>'
             resp += "</ul>"
     return HttpResponse(resp + formulario_volver)
 
-def distrito(request, recurso):
-    distrito_elegido = recurso.split('/')[1]
+def distrito_concreto(request, recurso):
+    distrito_elegido = recurso
     if request.method == 'GET':
-        resp = '<h1>Museos del distrito (' + distrito_elegido + '): </h1>'
-        museos_distritos = Museo.objects.filter(distrito=distrito_elegido)
+        resp = '<h1>Museos en ' + distrito_elegido + ': </h1>'
+        museos_distritos = Museo.objects.filter(distrito = distrito_elegido)
+        print(museos_distritos)
         for objeto in museos_distritos:
             resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
             resp += "</ul>"
     return HttpResponse(resp + formulario_volver)
 
+@csrf_exempt
 def museos_id(request,recurso):
     objeto = Museo.objects.get(id=recurso)
     comentarios = Comentario.objects.all()
@@ -173,13 +193,13 @@ def museos_id(request,recurso):
     else:
         acc = 'Buena'
 
-    resp = '<h1>MUSEO:</h1>' + " "'<h1>' + objeto.nombre + '</h1></br><h3>Descripción:</h3></br>' + objeto.descripcion +  '</br>'
+    resp = '<h1>MUSEO:</h1>' + " "'<h1>' + objeto.nombre + '</h1></br><h3>Descripción:</h3>' + objeto.descripcion +  '</br>'
     resp += '<h3>Horario:</h2>' + objeto.horario + '</br><h3>Transporte:</h3>' + objeto.transporte + '</br><h3>Accesibilidad:</h3>' + acc
-    resp += '<h3>URL:</h3>' + objeto.url + '</br><h3>Distrito:</h3>' + objeto.distrito + '</br><h3>Email:</h3>' + objeto.email
+    resp += '<h3>URL:</h3><a href="' + str(objeto.url) + '">' + objeto.url + '</a><h3>Dirección:</h3>' + objeto.direccion +'</br><h3>Barrio:</h3>' + objeto.barrio
+    resp += '</br><h3>Distrito:</h3>' + objeto.distrito +'</br><h3>Teléfono:</h3>' + objeto.telefono + '</br><h3>Email:</h3>' + objeto.email
     resp += '<h3>Comentarios:</h3>'
-        #faltan direccion, barrio y telefono
+
     comentarios = Comentario.objects.filter(museo__nombre__contains = objeto.nombre)
-    print(comentarios)
     if str(comentarios) == '[]':
         com = "No hay comentarios hasta el momento en este museo."
         resp += com + "</ul>"
@@ -188,9 +208,54 @@ def museos_id(request,recurso):
             com = i.comentario
             resp += com + '</br>'
         resp += "</ul>"
+
+    if request.method =='GET':
+        if request.user.is_authenticated():
+            return HttpResponse(resp + formulario_seleccion)
+        else:
+            return HttpResponse(resp)
+
+    if request.method =='POST':
+        user_seleccion = request.user.username
+        try:
+            museo_usuario = Content_User.objects.get(usuario = user_seleccion, museo = objeto)
+            museo_usuario.delete()
+        except ObjectDoesNotExist:
+            museo_usuario = Content_User(usuario = user_seleccion, museo = objeto)
+            museo_usuario.save()
+        return HttpResponse(resp + formulario_seleccion)
+
+def mylogout(request):
+    logout(request)
+    return HttpResponseRedirect('/')
+
+def user(request, recurso):
+    museos_usuario = Content_User.objects.filter(usuario = recurso)
+    resp = "Página de " + recurso + ":"
+    for objeto in museos_usuario:
+        resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+        resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>' + objeto.publicacion
+        resp += "</ul>"
+    return HttpResponse(resp)
+
+def about(request):
+    intro = "Página realizada por Cayetana Gómez Casado."
+    funcionamiento = "Aquí tienes las diferentes urls disponibles que te ayudarán a su correcto funcionamiento:"
+    resp = '<h1> Aplicación de museos de la ciudad de madrid </h1>'
+    resp += '<h3>' + intro + '</br>' + funcionamiento + '</h3>'
+    resp += '<li><a href="/cargar">' + 'Cargar base de datos.' + '</a></br>'
+    resp += "</ul>"
+    resp += '<li><a href="/">' + 'Página principal.' + '</a></br>'
+    resp += "</ul>"
+    resp += '<li><a href="/museos">' + 'Página con todos los museos que hay en la ciudad de Madrid.' + '</a></br>'
+    resp += "</ul>"
+    resp += '<li><a href="/museos/">' + 'Página de cada museo.' + '</a></br>'
+    resp += "</ul>"
     return HttpResponse(resp)
 
 def notOption(request, recurso):
-    resp = "No contemplada esta opción."
-    resp +="Lista opciones:"
+    resp = "No contemplada esta opción.</br>"
+    resp +="Quizás pueda ayudarte la siguiente página: </br>"
+    resp += '<li><a href="/about">' + 'Página con la auditoría y el funcionamiento.' + '</a></br>'
+    resp += "</ul>"
     return HttpResponse(resp)

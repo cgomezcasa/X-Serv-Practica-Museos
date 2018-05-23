@@ -19,7 +19,7 @@ class Museo(models.Model):
 class Content_User(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.CharField(max_length=32)
-    publicacion = models.DateTimeField(auto_now = True, blank=True, null=True)
+    #publicacion = models.DateTimeField(auto_now = True, blank=True, null=True)
     def __str__(self):
         return self.usuario
 

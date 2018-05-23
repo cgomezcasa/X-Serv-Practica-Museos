@@ -36,6 +36,18 @@ formulario_seleccion = """
           <input type="submit" value="Seleccionar/Deseleccionar museo">
         </form>
         """
+formulario_siguiente = """
+        <form action="" method="POST">
+          <input type="submit" value="Siguiente página">
+        </form>
+        """
+formulario_comentario = """
+        <form action="">
+          <h3>PAGE:</h3>
+          <input type="text" name="Comentario" value=""><br>
+          <input type="submit" value="Enviar">
+        </form>
+        """
 
 def xmlParser(request):
     print("Estoy en parser")
@@ -117,7 +129,7 @@ def xmlParser(request):
                       distrito = distrito, telefono = telefono, email = email)
 
         museo.save()
-        
+
     return HttpResponse(formulario_carga)
 
 def pagina_principal(request):
@@ -211,6 +223,7 @@ def museos_id(request,recurso):
 
     if request.method =='GET':
         if request.user.is_authenticated():
+            #formulario_comentario
             return HttpResponse(resp + formulario_seleccion)
         else:
             return HttpResponse(resp)
@@ -229,14 +242,40 @@ def mylogout(request):
     logout(request)
     return HttpResponseRedirect('/')
 
+@csrf_exempt
 def user(request, recurso):
+    usuario = recurso.split('/')[0]
     museos_usuario = Content_User.objects.filter(usuario = recurso)
-    resp = "Página de " + recurso + ":"
-    for objeto in museos_usuario:
-        resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-        resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>' + objeto.publicacion
-        resp += "</ul>"
-    return HttpResponse(resp)
+    try:
+        long_recurso  = recurso.split('/')[1]
+        root = ET.Element('Contenidos')
+        child = ET.SubElement(root, 'atributo')
+        for i in museos_usuario:
+            subchild = ET.SubElement(child, "NOMBRE", str(i.museo.nombre))
+        return HttpResponse(ET.tostring(root))
+    except IndexError:
+        resp = "Página de " + recurso + ":"
+        num_museos = len(museos_usuario)
+        if request.method =='GET':
+            n_paginas = num_museos / 5
+            if num_museos > 5:
+                for objeto in museos_usuario[:5]:
+                    resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                    resp += "</ul>"
+                return HttpResponse(resp + formulario_siguiente)
+            else:
+                for objeto in museos_usuario:
+                    resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                    resp += "</ul>"
+                return HttpResponse(resp)
+        if request.method =='POST':
+            for objeto in museos_usuario[5:num_museos]:
+                resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+                resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                resp += "</ul>"
+            return HttpResponse(resp)
 
 def about(request):
     intro = "Página realizada por Cayetana Gómez Casado."

@@ -1,0 +1,22 @@
+{% extends "index.html" %}
+
+   {% block contenido %}
+	<div id="principal">
+        {{ respuesta }}
+	</div>
+   {% endblock %}
+
+
+   {% block filtro %}
+    <div id="filtro">
+        <form action="/acceso" method="POST">
+          <input type="submit" value="Filtrar por accesibilidad">
+        </form>
+	</div>
+   {% endblock %}
+
+   {% block listaUsuarios %}
+   <div id="usuariosregistrados">
+       {{ answer }} 
+   </div>
+   {% endblock %}

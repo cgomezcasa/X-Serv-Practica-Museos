@@ -21,11 +21,6 @@ formulario_volver = """
           <input type="submit" value="Página principal">
         </form>
         """
-formulario_acceso = """
-        <form action="/acceso" method="POST">
-          <input type="submit" value="Filtrar por accesibilidad">
-        </form>
-        """
 formulario_distrito = """
         <form action="/distrito" method="POST">
           <input type="submit" value="Filtrar por distrito">
@@ -151,16 +146,25 @@ def pagina_principal(request):
         try:
             if museos_comentados[0].id:
                 resp = "<h3>Museos de la ciudad de Madrid más comentados:</h3>"
-                list = museos_comentados
+                lista = museos_comentados
         except IndexError:
             resp = "<h3>Museos de la ciudad de Madrid(no hay comentarios):</h3>"
-            list = Museo.objects.all()
+            lista = Museo.objects.all()
 
-        for objeto in list:
+        for objeto in lista:
             resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
             resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
             resp += "</ul>"
-        return HttpResponse(sesion + resp +  formulario_acceso)
+
+        lista_usuarios = Content_User.objects.all()
+        resp = "<h4>Usuarios registrados: </h4>"
+        for objeto in lista_usuarios:
+            answer += '<li><a href="//' + objeto.usuario + '">' + objeto.usuario + '</a></br>
+            answer += "</ul>" 
+
+        #return HttpResponse(sesion + resp +  formulario_acceso)
+        context = {'respuesta': resp, 'usuarios_urls': answer}
+        return render(request, 'principal.html', context)
 
 
 @csrf_exempt

@@ -294,7 +294,7 @@ def user(request, recurso):
                 resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                 resp += "</ul>"
             return HttpResponse(resp)
-
+            
 def about(request):
     intro = "Página realizada por Cayetana Gómez Casado."
     funcionamiento = "Aquí tienes las diferentes urls disponibles que te ayudarán a su correcto funcionamiento:"

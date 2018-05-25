@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 class Museo(models.Model):
     idMuseo = models.IntegerField(null=True)
@@ -18,15 +19,15 @@ class Museo(models.Model):
 
 class Content_User(models.Model):
     museo = models.ForeignKey(Museo)
-    usuario = models.CharField(max_length=32)
-    #publicacion = models.DateTimeField(auto_now = True, blank=True, null=True)
+    usuario = models.ForeignKey(User)
+    fecha = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     def __str__(self):
         return self.usuario
 
 class Comentario(models.Model):
     museo = models.ForeignKey(Museo)
     comentario = models.TextField()
-    publicacion = models.DateTimeField(auto_now = True, blank=True, null=True)    #django models
+    publicacion = models.DateTimeField(auto_now_add=True, blank=True, null=True)    #django models
     def __str__(self):
         return str(self.publicacion)
 

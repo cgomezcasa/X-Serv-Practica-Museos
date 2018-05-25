@@ -7,10 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('museoApp', '0007_content_user_publicacion'),
+        ('museoApp', '0004_auto_20180518_1505'),
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='content_user',
+            name='fecha',
+            field=models.DateTimeField(null=True, auto_now_add=True),
+        ),
+        migrations.AlterField(
+            model_name='comentario',
+            name='publicacion',
+            field=models.DateTimeField(null=True, auto_now_add=True),
+        ),
         migrations.AlterField(
             model_name='museo',
             name='accesibilidad',

@@ -2,19 +2,19 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('museoApp', '0006_remove_content_user_publicacion'),
+        ('museoApp', '0005_auto_20180523_2214'),
     ]
 
     operations = [
-        migrations.AddField(
+        migrations.AlterField(
             model_name='content_user',
-            name='publicacion',
-            field=models.DateTimeField(default='2000-01-01 00:00', auto_now=True),
-            preserve_default=False,
+            name='usuario',
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
         ),
     ]

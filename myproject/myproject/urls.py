@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^acceso$', 'museoApp.views.filtro_accesibilidad'),
     url(r'^distrito$', 'museoApp.views.distrito'),
     url(r'^distrito/(.*)', 'museoApp.views.distrito_concreto'),
+    url(r'^comentario_nuevo$', 'museoApp.views.comentar'),
     url(r'^/(.*)$', 'museoApp.views.user'),
     url(r'^about$', 'museoApp.views.about'),
     url(r'^logout$', 'museoApp.views.mylogout'),

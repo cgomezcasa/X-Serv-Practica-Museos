@@ -42,9 +42,17 @@ formulario_siguiente = """
         </form>
         """
 formulario_comentario = """
+        <form action="/comentario_nuevo" method="POST">
+          <h3>Comentar:</h3>
+          <input type="hidden" name="museo" value="{}">
+          <textarea name="Comentario" cols="40" rows="5"></textarea><br>
+          <input type="submit" value="Enviar">
+        </form>
+        """
+formulario_titulo = """
         <form action="">
-          <h3>PAGE:</h3>
-          <input type="text" name="Comentario" value=""><br>
+          <h3>Título personal:</h3>
+          <textarea name="Título" cols="20" rows="5"></textarea><br>
           <input type="submit" value="Enviar">
         </form>
         """
@@ -148,7 +156,6 @@ def pagina_principal(request):
             resp = "<h3>Museos de la ciudad de Madrid(no hay comentarios):</h3>"
             list = Museo.objects.all()
 
-
         for objeto in list:
             resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
             resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
@@ -196,6 +203,15 @@ def distrito_concreto(request, recurso):
     return HttpResponse(resp + formulario_volver)
 
 @csrf_exempt
+def comentar(request):
+    museo = request.POST['museo']
+    comentario  = request.POST['Comentario']
+    museo = Museo.objects.get(nombre=museo)
+    museo_comentado = Comentario(museo = museo, comentario = comentario)
+    museo_comentado.save()
+    return HttpResponseRedirect('/museos')
+
+@csrf_exempt
 def museos_id(request,recurso):
     objeto = Museo.objects.get(id=recurso)
     comentarios = Comentario.objects.all()
@@ -223,8 +239,7 @@ def museos_id(request,recurso):
 
     if request.method =='GET':
         if request.user.is_authenticated():
-            #formulario_comentario
-            return HttpResponse(resp + formulario_seleccion)
+            return HttpResponse(resp + formulario_seleccion + formulario_comentario.format(objeto.nombre))
         else:
             return HttpResponse(resp)
 
@@ -258,22 +273,25 @@ def user(request, recurso):
         num_museos = len(museos_usuario)
         if request.method =='GET':
             n_paginas = num_museos / 5
+            if request.user.is_authenticated() and str(request.user) == str(usuario):
+                print("Aquí tengo las configuraciones en la página de usuario(CSS + título)")
             if num_museos > 5:
                 for objeto in museos_usuario[:5]:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
                 return HttpResponse(resp + formulario_siguiente)
             else:
                 for objeto in museos_usuario:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
                 return HttpResponse(resp)
+
         if request.method =='POST':
             for objeto in museos_usuario[5:num_museos]:
                 resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-                resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a></br>'
+                resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                 resp += "</ul>"
             return HttpResponse(resp)
 

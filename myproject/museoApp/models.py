@@ -22,7 +22,7 @@ class Content_User(models.Model):
     usuario = models.ForeignKey(User)
     fecha = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     def __str__(self):
-        return self.usuario
+        return self.usuario.username
 
 class Comentario(models.Model):
     museo = models.ForeignKey(Museo)
@@ -35,6 +35,6 @@ class Configuracion(models.Model):
     fuente = models.CharField(max_length=32)    #posible revision
     color = models.CharField(max_length=32)
     titulo = models.CharField(max_length=128)
-    usuario = models.CharField(max_length=32)
+    usuario = models.ForeignKey(User)
     def __str__(self):
-        return self.usuario
+        return self.usuario.username

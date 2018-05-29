@@ -9,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.views import logout
+from django.contrib.auth.models import User
+import json
 
 formulario_carga = """
         <form action="/">
@@ -49,6 +51,11 @@ formulario_titulo = """
           <h3>Título personal:</h3>
           <textarea name="Título" cols="20" rows="5"></textarea><br>
           <input type="submit" value="Enviar">
+        </form>
+        """
+formulario_acceso = """
+        <form action="/acceso" method="POST">
+        <input type="submit" value="Filtrar por accesibilidad">
         </form>
         """
 
@@ -93,9 +100,9 @@ def xmlParser(request):
                         accesibilidad = k.find('[@nombre="ACCESIBILIDAD"]').text
                         print(accesibilidad)
                         if accesibilidad == '0':
-                            False;
+                            "Mala";
                         else:
-                            True;
+                            "Buena";
                     except AttributeError:
                         pass
                     try:
@@ -142,29 +149,36 @@ def pagina_principal(request):
             sesion = 'Bienvenido: ' + request.user.username + '</br><a href="/logout">Logout</a>'
         else:
             sesion = '<li><a href="/login">Login</a>'
-        museos_comentados = Museo.objects.annotate(num_com=Count('comentario')).filter(num_com__gte=1).order_by('-num_com')[:5]
+
+        museos_seleccionados = Content_User.objects.annotate(num_sel=Count('museo')).filter(num_sel__gte=1).order_by('-num_sel')[:5]
         try:
-            if museos_comentados[0].id:
-                resp = "<h3>Museos de la ciudad de Madrid más comentados:</h3>"
-                lista = museos_comentados
+            if museos_seleccionados[0].id:
+                resp = "<h3>Museos de la ciudad de Madrid más seleccionados:</h3>"
+                lista = museos_seleccionados;
+                for objeto in lista:
+                    resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a>'
+                    resp += "</ul>"
         except IndexError:
-            resp = "<h3>Museos de la ciudad de Madrid(no hay comentarios):</h3>"
-            lista = Museo.objects.all()
+            museos_comentados = Museo.objects.annotate(num_com=Count('comentario')).filter(num_com__gte=1).order_by('-num_com')[:5]
+            try:
+                if museos_comentados[0].id:
+                    resp = "<h3>Museos de la ciudad de Madrid más comentados:</h3>"
+                    lista = museos_comentados;
+                    for objeto in lista:
+                        resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
+                        resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
+                        resp += "</ul>"
+            except IndexError:
+                resp = "<h3>No hay museos seleccionados ni con comentarios en la ciudad de Madrid hasta el momento.</h3>"
 
-        for objeto in lista:
-            resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
-            resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
-            resp += "</ul>"
+        lista_usuarios = User.objects.all()
+        answer = "<h3>Usuarios registrados: </h3>"
+        for indice in lista_usuarios:
+            answer += '<li><a href="//' + indice.username + '">' + indice.username + '</a>'
+            answer += "</ul>"
 
-        lista_usuarios = Content_User.objects.all()
-        resp = "<h4>Usuarios registrados: </h4>"
-        for objeto in lista_usuarios:
-            answer += '<li><a href="//' + objeto.usuario + '">' + objeto.usuario + '</a></br>
-            answer += "</ul>" 
-
-        #return HttpResponse(sesion + resp +  formulario_acceso)
-        context = {'respuesta': resp, 'usuarios_urls': answer}
-        return render(request, 'principal.html', context)
+        return HttpResponse(sesion + resp +  formulario_acceso + answer)
 
 
 @csrf_exempt
@@ -173,7 +187,7 @@ def filtro_accesibilidad(request):
         resp = "<h1>Museos de la ciudad de Madrid accesibles:</h1>"
         museos_accesibles = Museo.objects.filter(accesibilidad=1)
         for objeto in museos_accesibles:
-            resp += '<li><a href="/' + str(objeto.id) + '">' + objeto.nombre + '</a>'
+            resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a>'
             resp += "</ul>"
         return HttpResponse(resp + formulario_volver)
 
@@ -248,7 +262,7 @@ def museos_id(request,recurso):
             return HttpResponse(resp)
 
     if request.method =='POST':
-        user_seleccion = request.user.username
+        user_seleccion = request.user
         try:
             museo_usuario = Content_User.objects.get(usuario = user_seleccion, museo = objeto)
             museo_usuario.delete()
@@ -264,41 +278,39 @@ def mylogout(request):
 @csrf_exempt
 def user(request, recurso):
     usuario = recurso.split('/')[0]
-    museos_usuario = Content_User.objects.filter(usuario = recurso)
+    museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
+    xmlUser = '</br>'"Descargar fichero, "'<a href="/xml' + str(usuario) + '">' + "xml"'</a>'
     try:
         long_recurso  = recurso.split('/')[1]
-        root = ET.Element('Contenidos')
-        child = ET.SubElement(root, 'atributo')
-        for i in museos_usuario:
-            subchild = ET.SubElement(child, "NOMBRE", str(i.museo.nombre))
-        return HttpResponse(ET.tostring(root))
+        return HttpResponseRedirect('/' + usuario + '/json')   
     except IndexError:
         resp = "Página de " + recurso + ":"
         num_museos = len(museos_usuario)
         if request.method =='GET':
             n_paginas = num_museos / 5
-            if request.user.is_authenticated() and str(request.user) == str(usuario):
+            if request.user.is_authenticated() and str(request.user.username) == str(usuario):
                 print("Aquí tengo las configuraciones en la página de usuario(CSS + título)")
             if num_museos > 5:
                 for objeto in museos_usuario[:5]:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                return HttpResponse(resp + formulario_siguiente)
+                return HttpResponse(resp + formulario_siguiente + xmlUser)
             else:
                 for objeto in museos_usuario:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                return HttpResponse(resp)
+                return HttpResponse(resp + xmlUser)
 
         if request.method =='POST':
             for objeto in museos_usuario[5:num_museos]:
                 resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                 resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                 resp += "</ul>"
-            return HttpResponse(resp)
-            
+            return HttpResponse(resp + xmlUser)
+
+
 def about(request):
     intro = "Página realizada por Cayetana Gómez Casado."
     funcionamiento = "Aquí tienes las diferentes urls disponibles que te ayudarán a su correcto funcionamiento:"

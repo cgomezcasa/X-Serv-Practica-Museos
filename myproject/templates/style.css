@@ -11,14 +11,14 @@ body {
 }
 
 #container {
-	background: url(banne.jpg);
+	background: url(banner.jpg);
 	background-repeat: no-repeat;
 	height: 465px;
 	width: 400px;
 	font-size: 1.2em;
 	margin: 4px;
 	border-top: 1px solid white;
-	
+
 }
 
 #header {
@@ -71,14 +71,14 @@ p {margin-bottom: 15px;
    margin-top: 15px;
 }
 
-p.quote:first-letter 
+p.quote:first-letter
 {
 	color: #6F9800;
 	font-size:xx-large;
 	margin-top: 20px;
 	font-size: 2.5em;
   padding-right: 2px;
-   
+
 }
 
 h1 {
@@ -148,10 +148,10 @@ img {border: none;}
 
 .float_left {float: left;
               margin-right: 10px;}
-			  
+
 .float_right {float: right;
               margin-left: 10px;}
-			 
+
 a:link {color: #557C2B; text-decoration: none;}     /* unvisited link */
 a:visited {color: #83A956; text-decoration: none;}  /* visited link */
 a:hover {color: #821115; text-decoration: none;}   /* mouse over link */
@@ -188,8 +188,8 @@ color: #93B26E;
 text-decoration: none;
 }
 
-#navcontainer a:hover 
-{	
+#navcontainer a:hover
+{
 	background: url(images/menu.png) 0 -45px;
 	color: #562930;
 }
@@ -268,5 +268,3 @@ textarea {width: 200px;
 		  border-right: 1px solid white;
 
           margin-top: 3px;}
-
-

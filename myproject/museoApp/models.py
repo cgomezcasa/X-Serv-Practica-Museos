@@ -32,9 +32,9 @@ class Comentario(models.Model):
         return str(self.publicacion)
 
 class Configuracion(models.Model):
+    usuario = models.ForeignKey(User)
     fuente = models.CharField(max_length=32)    #posible revision
     color = models.CharField(max_length=32)
     titulo = models.CharField(max_length=128)
-    usuario = models.ForeignKey(User)
     def __str__(self):
         return self.usuario.username

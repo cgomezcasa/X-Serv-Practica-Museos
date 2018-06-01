@@ -47,15 +47,21 @@ formulario_comentario = """
         </form>
         """
 formulario_titulo = """
-        <form action="">
-          <h3>Título personal:</h3>
-          <textarea name="Título" cols="20" rows="5"></textarea><br>
+        <form action="/titulo_nuevo" method="POST">
+          <h3>Titulo:</h3>
+          <textarea name="Título" cols="30" rows="2"></textarea><br>
           <input type="submit" value="Enviar">
         </form>
         """
 formulario_acceso = """
         <form action="/acceso" method="POST">
         <input type="submit" value="Filtrar por accesibilidad">
+        </form>
+        """
+formulario_pagina = """
+        <form action="" method="POST">
+          <input type="hidden" name="n" value="{}">
+          <input type="submit" value="\n">
         </form>
         """
 
@@ -142,6 +148,37 @@ def xmlParser(request):
 
     return HttpResponse(formulario_carga)
 
+def notOption():
+    resp = "No contemplada esta opción.</br>"
+    resp +="Quizás pueda ayudarte la siguiente página: </br>"
+    resp += '<li><a href="/about">' + 'Página con la auditoría y el funcionamiento.' + '</a></br>'
+    resp += "</ul>"
+    return (resp)
+
+def get_museos_comentados(lista):
+    resp = ""
+    for objeto in lista:
+        resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
+        resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
+        resp += "</ul>"
+    return (resp)
+
+def get_museos_seleccionados(lista):
+    resp = ""
+    for objeto in lista:
+        resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
+        resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a>'
+        resp += "</ul>"
+    return (resp)
+
+def get_usuarios():
+    lista_usuarios = User.objects.all()
+    resp = "<h3>Usuarios registrados: </h3>"
+    for indice in lista_usuarios:
+        resp += '<li><a href="/' + indice.username + '">' + indice.username + '</a>'
+        resp += "</ul>"
+    return (resp)
+
 def pagina_principal(request):
 
     if request.method == 'GET':
@@ -154,31 +191,20 @@ def pagina_principal(request):
         try:
             if museos_seleccionados[0].id:
                 resp = "<h3>Museos de la ciudad de Madrid más seleccionados:</h3>"
-                lista = museos_seleccionados;
-                for objeto in lista:
-                    resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-                    resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a>'
-                    resp += "</ul>"
+                resp += get_museos_seleccionados(museos_seleccionados)
         except IndexError:
             museos_comentados = Museo.objects.annotate(num_com=Count('comentario')).filter(num_com__gte=1).order_by('-num_com')[:5]
             try:
                 if museos_comentados[0].id:
                     resp = "<h3>Museos de la ciudad de Madrid más comentados:</h3>"
-                    lista = museos_comentados;
-                    for objeto in lista:
-                        resp += '<li><a href="' + str(objeto.url) + '">' + objeto.nombre + ' en ' + objeto.direccion
-                        resp += '</a></br><a href="/museos/' + str(objeto.id) + '">' + "Más información" + '</a>'
-                        resp += "</ul>"
+                    resp += get_museos_comentados(museos_comentados)
+
             except IndexError:
-                resp = "<h3>No hay museos seleccionados ni con comentarios en la ciudad de Madrid hasta el momento.</h3>"
+                resp = "<h3>No hay museos seleccionados ni comentados en la ciudad de Madrid hasta el momento.</h3>"
 
-        lista_usuarios = User.objects.all()
-        answer = "<h3>Usuarios registrados: </h3>"
-        for indice in lista_usuarios:
-            answer += '<li><a href="//' + indice.username + '">' + indice.username + '</a>'
-            answer += "</ul>"
+        usuarios = get_usuarios()
 
-        return HttpResponse(sesion + resp +  formulario_acceso + answer)
+        return HttpResponse(sesion + resp +  formulario_acceso + usuarios)
 
 
 @csrf_exempt
@@ -275,40 +301,93 @@ def mylogout(request):
     logout(request)
     return HttpResponseRedirect('/')
 
+def user_json(request, recurso):
+    usuario = recurso.split('/')[0]
+    print(str(usuario))
+    museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
+    #aquí meto el template de json con el usuario y sus museos
+    return HttpResponseRedirect('/')
+
+def user_xml(request, recurso):
+    usuario = recurso.split('/')[0]
+    museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
+    #aquí meto el template de xml con el usuario y sus museos
+    return HttpResponseRedirect('/')
+
+@csrf_exempt
+def tituloUser(request):
+    titulo  = request.POST['Título']
+    usuario = request.user
+    try:
+        user_titulo = Configuracion.objects.get(usuario=usuario)
+        user_titulo.delete()
+    except ObjectDoesNotExist:
+        pass;
+    user_titulo = Configuracion(titulo = titulo, usuario=usuario)
+    user_titulo.save()
+    return HttpResponseRedirect('/')
+
+def get_titulo(usuario):
+    titulo = Configuracion.objects.filter(usuario__username__contains=usuario)
+    for i in titulo:
+        user_titulo = i.titulo
+
+    if str(user_titulo) != '[]':
+        titulo = '<h3>' + str(user_titulo) + '</h3>'
+    else:
+        if request.user.is_authenticated() and str(request.user.username) == str(usuario):
+            titulo = formulario_titulo
+        else:
+            titulo = '<h3>Titulo</h3>'
+    return(titulo)
+
 @csrf_exempt
 def user(request, recurso):
     usuario = recurso.split('/')[0]
-    museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
-    xmlUser = '</br>'"Descargar fichero, "'<a href="/xml' + str(usuario) + '">' + "xml"'</a>'
     try:
-        long_recurso  = recurso.split('/')[1]
-        return HttpResponseRedirect('/' + usuario + '/json')   
-    except IndexError:
-        resp = "Página de " + recurso + ":"
-        num_museos = len(museos_usuario)
-        if request.method =='GET':
-            n_paginas = num_museos / 5
-            if request.user.is_authenticated() and str(request.user.username) == str(usuario):
-                print("Aquí tengo las configuraciones en la página de usuario(CSS + título)")
-            if num_museos > 5:
+        usuario_encontrado = User.objects.get(username=usuario)
+        museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
+        xmlUser = '</br>'"Descargar fichero, "'<a href="/xml/' + str(usuario) + '">' + "xml"'</a>'
+        titulo = get_titulo(usuario)
+
+        try:
+            long_recurso  = recurso.split('/')[1]
+            return HttpResponseRedirect('/json/' + usuario)
+        except IndexError:
+
+            num_museos = len(museos_usuario)
+
+            n_paginas = int((num_museos / 5) + 1 )
+            ans = "</br> Páginas disponibles:</br>"
+            for i in range(1,n_paginas+1):
+                 print(str(i))
+                 ans += formulario_pagina.format(i)
+
+            resp = ""
+            if request.method =='GET':
                 for objeto in museos_usuario[:5]:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                return HttpResponse(resp + formulario_siguiente + xmlUser)
-            else:
-                for objeto in museos_usuario:
+                return HttpResponse(titulo + resp + ans + xmlUser)
+
+            if request.method =='POST':
+                n = int(request.POST['n'])
+                if n*5 > num_museos:
+                     fin = num_museos
+                else:
+                     fin = n*5
+                for objeto in museos_usuario[(n-1)*5:n*5]:
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                return HttpResponse(resp + xmlUser)
+                return HttpResponse(titulo + resp + ans + xmlUser)
+            #if request.user.is_authenticated() and str(request.user.username) == str(usuario):
+            #    print("Aquí tengo las configuraciones en la página de usuario(CSS)")
+    except ObjectDoesNotExist:
+        error = notOption()
+        return HttpResponse(error)
 
-        if request.method =='POST':
-            for objeto in museos_usuario[5:num_museos]:
-                resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
-                resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
-                resp += "</ul>"
-            return HttpResponse(resp + xmlUser)
 
 
 def about(request):
@@ -318,17 +397,10 @@ def about(request):
     resp += '<h3>' + intro + '</br>' + funcionamiento + '</h3>'
     resp += '<li><a href="/cargar">' + 'Cargar base de datos.' + '</a></br>'
     resp += "</ul>"
-    resp += '<li><a href="/">' + 'Página principal.' + '</a></br>'
+    resp += '<li><a href="/">' + 'Página principal con lista de usuarios registrados.' + '</a></br>'
     resp += "</ul>"
     resp += '<li><a href="/museos">' + 'Página con todos los museos que hay en la ciudad de Madrid.' + '</a></br>'
     resp += "</ul>"
     resp += '<li><a href="/museos/">' + 'Página de cada museo.' + '</a></br>'
-    resp += "</ul>"
-    return HttpResponse(resp)
-
-def notOption(request, recurso):
-    resp = "No contemplada esta opción.</br>"
-    resp +="Quizás pueda ayudarte la siguiente página: </br>"
-    resp += '<li><a href="/about">' + 'Página con la auditoría y el funcionamiento.' + '</a></br>'
     resp += "</ul>"
     return HttpResponse(resp)

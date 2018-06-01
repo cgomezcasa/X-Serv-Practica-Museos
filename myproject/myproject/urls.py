@@ -13,9 +13,11 @@ urlpatterns = [
     url(r'^distrito$', 'museoApp.views.distrito'),
     url(r'^distrito/(.*)', 'museoApp.views.distrito_concreto'),
     url(r'^comentario_nuevo$', 'museoApp.views.comentar'),
-    url(r'^/(.*)$', 'museoApp.views.user'),
+    url(r'^titulo_nuevo$', 'museoApp.views.tituloUser'),
+    url(r'^json/(.*)', 'museoApp.views.user_json'),
+    url(r'^xml/(.*)', 'museoApp.views.user_xml'),
     url(r'^about$', 'museoApp.views.about'),
     url(r'^logout$', 'museoApp.views.mylogout'),
     url(r'^login$', login),
-    url(r'^(.*)','museoApp.views.notOption')
+    url(r'^(.*)', 'museoApp.views.user'),
 ]

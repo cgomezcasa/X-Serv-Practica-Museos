@@ -1,10 +1,13 @@
-{% load static %}
+
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-<link href="style.css" rel="stylesheet" type="text/css">
+
+{% load static %}
+<link href="{% static "style.css" %}" rel="stylesheet" type="text/css">
 </head>
 
 <body>
@@ -41,26 +44,20 @@
 
 <div id="navcontainer">
 <ul id="navlist">
-<li id="active"><a href="#" id="current">Inicio</a></li>
-<li class="green"><a href="#">Todos</a></li>
-<li><a href="#">About</a></li>
-</ul>
-</div>
+{% block menu %}{% endblock %}
+{% block usuarios %}{% endblock %}
 
-{% block listaUsuarios %}{% endblock %}
-
-
+<!-- chacer un bloque igual que el de menu para usuarios registrados con un for... además revisar la página de delicious fruit y copiar sino la parte de usuarios que aparecía ahí-->
 </div>
 
 <div id="right">
-
   <p>{% block contenido %}{% endblock %}</p>
-
-  {% block filtro %}{% endblock %}
-
-<div id="footer">Esta aplicacion
+  {% block options %}{% endblock %}
+</div>
+<center>
+<div id="footer">Esta aplicación
 utiliza datos del portal de datos abiertos de la ciudad de Madrid | <a href="https://datos.madrid.es/portal/site/egob/menuitem.c05c1f754a33a9fbe4b2e4b284f1a5a0/?vgnextoid=118f2fdbecc63410VgnVCM1000000b205a0aRCRD&vgnextchannel=374512b9ace9f310VgnVCM100000171f5a0aRCRD&vgnextfmt=default">Datos Ayuntamiento de Madrid.</a> </div>
 </div>
-
+</center>
 </body>
 </html>

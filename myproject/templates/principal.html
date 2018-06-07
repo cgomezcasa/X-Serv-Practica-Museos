@@ -1,22 +1,40 @@
 {% extends "index.html" %}
 
    {% block contenido %}
-	<div id="principal">
-        {{ respuesta }}
-	</div>
+      {% if acceso %}
+        {{ filtro_acc|safe }}
+      {% else %}
+        {{ respuesta|safe }}
+      {% endif %}
    {% endblock %}
 
 
-   {% block filtro %}
-    <div id="filtro">
-        <form action="/acceso" method="POST">
-          <input type="submit" value="Filtrar por accesibilidad">
-        </form>
-	</div>
-   {% endblock %}
+   {% block options %}
+    {% if acceso %}
+          <form action="/">
+            <input type="submit" value="Página principal">
+          </form>
+    {% else %}
+          <form action="/acceso" method="POST">
+            {% csrf_token %}
+            <input type="submit" value="Filtrar por accesibilidad">
+          </form>
+    {% endif %}
+  {% endblock %}
 
-   {% block listaUsuarios %}
-   <div id="usuariosregistrados">
-       {{ answer }}
-   </div>
-   {% endblock %}
+
+  {% block usuarios %}
+    <h4><span class="menu_first_letter">Usuarios registrados</span></h4>
+
+    {% for user in lista_usuarios %}
+      <li id="active"></li>
+      <li class="green"><a href="/{{ user.username }}" id="current">{{ user.username }} </a></li>
+    {% endfor %}
+  {% endblock %}
+
+  {% block menu %}
+    <li id="active"></li>
+    <li class="green"><a href="/museos" id="current">Todos</a></li>
+    <li><a href="/about">About</a></li>
+    <li><a href="/cargar">Cargar</a></li>
+  {% endblock %}

@@ -1,0 +1,38 @@
+{% extends "index.html" %}
+
+  {% block contenido %}
+    </br></br></br></br></br></br></br></br></br></br></br></br></br>
+    {% if dist %}
+      {{ filtro_dist|safe }}
+    {% elif concreto %}
+      {{ distrito_concreto|safe }}
+    {% else %}
+      {{ respuesta|safe }}
+    {% endif %}
+
+  {% endblock %}
+
+
+{% block options %}
+  {% if dist %}
+    <form action="/museos">
+      <input type="submit" value="Volver">
+    </form>
+  {% elif concreto %}
+    <form action="/distrito" method="POST">
+      {% csrf_token %}
+      <input type="submit" value="Volver">
+    </form>
+  {% else %}
+    <form action="/distrito" method="POST">
+      {% csrf_token %}
+      <input type="submit" value="Filtrar por distrito">
+    </form>
+  {% endif %}
+{% endblock %}
+
+
+{% block menu %}
+  <li id="active"><a href="/" id="current">Inicio</a></li>
+  <li><a href="/about">About</a></li>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "index.html" %}
+
+{% block contenido %}
+  </br></br></br></br></br></br></br>
+  {{ titulo | safe}}
+  {{respuesta | safe }}
+  {{ ans | safe }}
+{% endblock %}
+
+{% block menu %}
+  <li id="active"><a href="/" id="current">Inicio</a></li>
+  <li><a href="/museos">Todos</a></li>
+  <li><a href="/about">About</a></li>
+{% endblock %}

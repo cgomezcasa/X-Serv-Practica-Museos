@@ -18,6 +18,6 @@ urlpatterns = [
     url(r'^xml/(.*)', 'museoApp.views.user_xml'),
     url(r'^about$', 'museoApp.views.about'),
     url(r'^logout$', 'museoApp.views.mylogout'),
-    url(r'^login$', login),
+    url(r'^login$', 'museoApp.views.mylogin'),
     url(r'^(.*)', 'museoApp.views.user'),
 ]

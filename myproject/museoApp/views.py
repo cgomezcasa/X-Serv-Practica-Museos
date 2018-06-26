@@ -211,7 +211,6 @@ def distrito_concreto(request, recurso):
         concreto = True
         resp = '<h3>Museos en ' + distrito_elegido + ': </h3>'
         museos_distritos = Museo.objects.filter(distrito = distrito_elegido)
-        print(museos_distritos)
         for objeto in museos_distritos:
             resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
             resp += 'Dirección: ' + objeto.direccion + ', ' + objeto.barrio + '.'

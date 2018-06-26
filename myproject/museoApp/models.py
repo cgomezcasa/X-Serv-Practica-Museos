@@ -21,6 +21,7 @@ class Content_User(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(User)
     fecha = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    #contador = models.IntegerField(null=True)
     def __str__(self):
         return self.usuario.username
 

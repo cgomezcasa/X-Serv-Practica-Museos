@@ -6,12 +6,12 @@
 
 body {
 	font-family: Georgia, "Times New Roman", Times, serif;
-	font-size: 62.5%;						<!-- cambiar tamaño fuente -->
-  background-color: white;    <!-- cambiar color fondo -->
+	font-size: {{ fuente }}%;
+  background-color: {{ color }};
 }
 
 #container {
-	background: url(banner.jpg);
+	background: url(/static/banner.jpg);
 	background-repeat: no-repeat;
 	height: 465px;
 	width: 400px;
@@ -138,7 +138,7 @@ blockquote {
 	padding-top: 30px;
 	padding-bottom:30px;
 	border: 1px dotted #EBE2B7;
-	background-image: url(images/blockquote.png);
+	background-image: url(/static/images/blockquote.png);
 	background-repeat: no-repeat;
 	font-style: italic;
 }
@@ -176,7 +176,7 @@ a:active {color: #577E2D; text-decoration: none;}   /* selected link */
 	width: 182px;
 	background-color: #DCE3ED;
 	border-bottom: 1px solid #eee;
-	background-image: url(images/menu.png);
+	background-image: url(/static/images/menu.png);
 	background-repeat: repeat-x;
 	height: 27px;
 }
@@ -190,7 +190,7 @@ text-decoration: none;
 
 #navcontainer a:hover
 {
-	background: url(images/menu.png) 0 -45px;
+	background: url(/static/images/menu.png) 0 -45px;
 	color: #562930;
 }
 
@@ -213,7 +213,7 @@ form {
 
 input.fields {display: block;
         width: 140px;
-        background: url(images/input_bg.png);
+        background: url(/static/images/input_bg.png);
 		border-top: 1px solid #E3E4E9;
 		border-left: 1px solid #E3E4E9;
 		border-bottom: 1px solid white;
@@ -245,14 +245,14 @@ form.contact_us {
 	margin-left: 0px;
 	padding: 15px;
 	background-color: #FBF9F4;
-	background-image: url(images/form_bg.png);
+	background-image: url(/static/images/form_bg.png);
 	background-repeat: no-repeat;
 	background-position: right bottom;
 }
 
 input.fields_contact_us {display: block;
     		width: 185px;
-        background: url(images/input_bg.png);
+        background: url(/static/images/input_bg.png);
 		border-top: 1px solid #E3E4E9;
 		border-left: 1px solid #E3E4E9;
 		border-bottom: 1px solid white;
@@ -261,7 +261,7 @@ input.fields_contact_us {display: block;
 	    margin-bottom: 3px;}
 
 textarea {width: 200px;
-          background: url(images/input_bg.png);
+          background: url(/static/images/input_bg.png);
           border-top: 1px solid #E3E4E9;
 		  border-left: 1px solid #E3E4E9;
 		  border-bottom: 1px solid white;

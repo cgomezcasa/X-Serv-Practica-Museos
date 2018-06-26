@@ -6,12 +6,18 @@
     {% if acceso %}
       <form action="/titulo_nuevo" method="POST">
         <h3>Titulo:</h3>
-        <textarea name="Título" cols="30" rows="2"></textarea><br>
+        <textarea name="Nuevo título:" cols="30" rows="2"></textarea><br>
         <input type="submit" value="Enviar">
       </form>
     {% endif %}
   {{respuesta | safe }}
+  {% if acceso %}
+    <form action="/estilo_nuevo" method="POST">
+      <input type="submit" value="Cambiar estilo">
+    </form>
+  {% endif %}
   {{ ans | safe }}
+
 {% endblock %}
 
 {% block menu %}
@@ -22,5 +28,6 @@
 
 {% block usuarios %}
   <h4><span class="menu_first_letter">Opciones</span></h4>
-  <li id="active"><a href="{{usuario}}/json" id="current">Json</a></li>
+  <li id="active"><a href="{{nombre}}/json" id="current">Json</a></li>
+  <li><a href="{{nombre}}/xml">Xml</a></li>
 {% endblock %}

@@ -8,7 +8,7 @@ from sqlite3 import OperationalError
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.views import logout
+from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.models import User
 import json
 
@@ -18,26 +18,6 @@ formulario_carga = """
           <input type="submit" value="Cargar museos">
         </form>
         """
-# formulario_volver = """
-#         <form action="/">
-#           <input type="submit" value="Página principal">
-#         </form>
-#         """
-# formulario_distrito = """
-#         <form action="/distrito" method="POST">
-#           <input type="submit" value="Filtrar por distrito">
-#         </form>
-#         """
-# formulario_seleccion = """
-#         <form action="" method="POST">
-#           <input type="submit" value="Seleccionar/Deseleccionar museo">
-#         </form>
-#         """
-# formulario_siguiente = """
-#         <form action="" method="POST">
-#           <input type="submit" value="Siguiente página">
-#         </form>
-#         """
 formulario_comentario = """
         <form action="/comentario_nuevo" method="POST">
           <h3>Comentar:</h3>
@@ -46,24 +26,15 @@ formulario_comentario = """
           <input type="submit" value="Enviar">
         </form>
         """
-formulario_titulo = """
-        <form action="/titulo_nuevo" method="POST">
-          <h3>Titulo:</h3>
-          <textarea name="Título" cols="30" rows="2"></textarea><br>
-          <input type="submit" value="Enviar">
-        </form>
-        """
-# formulario_acceso = """
-#         <form action="/acceso" method="POST">
-#         <input type="submit" value="Filtrar por accesibilidad">
-#         </form>
-#         """
 formulario_pagina = """
         <form action="" method="POST">
           <input type="hidden" name="n" value="{}">
-          <input type="submit" value="\n">
+          <input type="submit" value="{}">
         </form>
         """
+
+FUENTE_CSS_DEFAULT = '14px'
+COLOR_CSS_DEFAULT = '#FFFFFF'
 
 def xmlParser(request):
     print("Estoy en parser")
@@ -176,11 +147,6 @@ def get_museos_seleccionados(lista):
 def pagina_principal(request):
 
     if request.method == 'GET':
-        if request.user.is_authenticated():
-            sesion = 'Bienvenido: ' + request.user.username + '</br><a href="/logout">Logout</a>'
-        else:
-            sesion = '<li><a href="/login">Login</a>'
-
         museos_seleccionados = Content_User.objects.annotate(num_sel=Count('museo')).filter(num_sel__gte=1).order_by('-num_sel')[:5]
         try:
             if museos_seleccionados[0].id:
@@ -198,9 +164,8 @@ def pagina_principal(request):
 
         lista_usuarios = User.objects.all()
 
-        context = {'respuesta': resp, 'lista_usuarios': lista_usuarios}
+        context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'lista_usuarios': lista_usuarios}
         return render(request, 'principal.html', context)
-        #return HttpResponse(sesion + resp +  formulario_acceso + usuarios)
 
 
 @csrf_exempt
@@ -213,9 +178,8 @@ def filtro_accesibilidad(request):
             resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a>'
             resp += "</ul>"
         lista_usuarios = User.objects.all()
-        context = {'filtro_acc': resp, 'acceso': acceso, 'lista_usuarios': lista_usuarios}
+        context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'filtro_acc': resp, 'acceso': acceso, 'lista_usuarios': lista_usuarios}
         return render(request, 'principal.html', context)
-        #return HttpResponse(resp + formulario_volver)
 
 def museos(request):
     resp = "<h3>Todos los museos de la ciudad de Madrid:</h3>"
@@ -223,10 +187,9 @@ def museos(request):
     for objeto in museos_lista:
         resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
         resp += "</ul>"
-    context = {'respuesta': resp}
+    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp}
     resp = None
     return render(request, 'museos.html', context)
-    #return HttpResponse(formulario_distrito + resp)
 
 @csrf_exempt
 def distrito(request):
@@ -237,10 +200,9 @@ def distrito(request):
         for objeto in lista_distritos:
             resp += '<li><a href="/distrito/' + objeto +  '">' + objeto + '</a></br>'
             resp += "</ul>"
-    context = {'filtro_dist': resp, 'dist': dist}
+    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'filtro_dist': resp, 'dist': dist}
     resp = dist = None
     return render(request, 'museos.html', context)
-    #return HttpResponse(resp + formulario_volver)
 
 def distrito_concreto(request, recurso):
     distrito_elegido = recurso
@@ -254,10 +216,9 @@ def distrito_concreto(request, recurso):
             resp += '<li><a href="/museos/' + str(objeto.id) + '">' + objeto.nombre + '</a></br>'
             resp += 'Dirección: ' + objeto.direccion + ', ' + objeto.barrio + '.'
             resp += "</ul>"
-    context = {'distrito_concreto': resp, 'dist': dist, 'concreto': concreto}
+    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'distrito_concreto': resp, 'dist': dist, 'concreto': concreto}
     resp = dist = concreto = None
     return render(request, 'museos.html', context)
-    #return HttpResponse(resp + formulario_volver)
 
 @csrf_exempt
 def comentar(request):
@@ -298,13 +259,11 @@ def museos_id(request,recurso):
         if request.user.is_authenticated():
             sel = True
             coment = True
-            context = {'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
-            #return HttpResponse(resp + formulario_seleccion + formulario_comentario.format(objeto.nombre))
+            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
         else:
             sel = False
             coment = False
-            context = {'respuesta': resp, 'seleccion': sel, 'comentar': coment}
-            #return HttpResponse(resp)
+            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
 
     if request.method =='POST':
         user_seleccion = request.user
@@ -317,9 +276,7 @@ def museos_id(request,recurso):
 
         sel = True
         coment = False
-        context = {'respuesta': resp, 'seleccion': sel, 'comentar': coment}
-        #return HttpResponse(resp + formulario_seleccion)
-
+        context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
 
     return render(request, 'museo_id.html', context)
 
@@ -331,20 +288,38 @@ def mylogout(request):
 def mylogin(request):
     username = request.POST['username']
     password = request.POST['password']
-    user = authenticate(request, username=username, password=password)
+    user = authenticate(username=username, password=password)
     if user is not None:
         login(request, user)
-        return HttpResponseRedirect('/' + str(user))
+        return HttpResponseRedirect('/')
     else:
         #opcion registro de usuarios
         return HttpResponseRedirect('/')
 
-def user_json(request, recurso):
-    usuario = recurso.split('/')[0]
-    print(str(usuario))
-    museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
-    #aquí meto el template de json con el usuario y sus museos
-    return HttpResponseRedirect('/')
+def elementos_json(elementos, museo):
+    elemento = {}
+    elemento['idMuseo'] = museo.museo.idMuseo
+    elemento['nombre'] = museo.museo.nombre
+    elemento['descripcion'] = museo.museo.descripcion
+    elemento['horario'] = museo.museo.horario
+    elemento['transporte'] = museo.museo.transporte
+    elemento['accesibilidad'] = museo.museo.accesibilidad
+    elemento['url'] = museo.museo.url
+    elemento['direccion'] = museo.museo.direccion
+    elemento['barrio'] = museo.museo.barrio
+    elemento['distrito'] = museo.museo.distrito
+    elemento['telefono'] = museo.museo.telefono
+    elemento['email'] = museo.museo.email
+    elementos.append(elemento)
+
+def user_json(usuario, museos):
+    diccionario = {}
+    diccionario['museos'] = []
+    for i in museos:
+        print(i)
+        elementos_json(diccionario['museos'], i)
+    data = json.dumps(diccionario, indent=4)
+    return data
 
 def user_xml(request, recurso):
     usuario = recurso.split('/')[0]
@@ -367,17 +342,13 @@ def tituloUser(request):
 
 def get_titulo(usuario):
     titulo = Configuracion.objects.filter(usuario__username__contains=usuario)
-    for i in titulo:
-        tituloUsuario = i.titulo
-    print(str(tituloUsuario))
-    if str(tituloUsuario) != '[]':
+    if str(titulo) != '[]':
+        for i in titulo:
+            tituloUsuario = i.titulo
         titulo = '<h3>' + str(tituloUsuario) + '</h3>'
         tituloUsuario = None
     else:
-        if request.user.is_authenticated() and str(request.user.username) == str(usuario):
-            titulo = formulario_titulo
-        else:
-            titulo = '<h3>Página de ' + usuario + '</h3>'
+        titulo = '<h3>Página de ' + usuario + '</h3>'
     return(titulo)
 
 @csrf_exempt
@@ -385,22 +356,25 @@ def user(request, recurso):
     usuario = recurso.split('/')[0]
     try:
         usuario_encontrado = User.objects.get(username=usuario)
+        print(usuario_encontrado)
         museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
         xmlUser = '</br>'"Descargar fichero, "'<a href="/xml/' + str(usuario) + '">' + "xml"'</a>'
         titulo = get_titulo(usuario)
-
+        acceso = False
+        if request.user.is_authenticated() and str(request.user.username) == str(usuario):
+            acceso = True
         try:
             long_recurso  = recurso.split('/')[1]
-            return HttpResponseRedirect('/json/' + usuario)
+            #aquí tendremos que ver la palabra de la que se trata y diferenciar entre xml y json
+            data = user_json(usuario_encontrado, museos_usuario)
+            return HttpResponse(data, content_type="application/json")
         except IndexError:
 
             num_museos = len(museos_usuario)
-
             n_paginas = int((num_museos / 5) + 1 )
             ans = "</br> Páginas disponibles:</br>"
             for i in range(1,n_paginas+1):
-                 print(str(i))
-                 ans += formulario_pagina.format(i)
+                 ans += formulario_pagina.format(i,i)
 
             resp = ""
             if request.method =='GET':
@@ -408,8 +382,7 @@ def user(request, recurso):
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                context = {'titulo': titulo, 'respuesta': resp, 'ans': ans, 'xmlUser': xmlUser}
-                #return HttpResponse(titulo + resp + ans + xmlUser)
+                context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'titulo': titulo, 'respuesta': resp, 'ans': ans, 'xmlUser': xmlUser, 'acceso': acceso}
 
             if request.method =='POST':
                 n = int(request.POST['n'])
@@ -421,10 +394,10 @@ def user(request, recurso):
                     resp += '<li><a href="' + str(objeto.museo.url) + '">' + objeto.museo.nombre + ' en ' + objeto.museo.direccion
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
-                #return HttpResponse(titulo + resp + ans + xmlUser)
-                context = {'titulo': titulo, 'respuesta': resp, 'ans': ans, 'xmlUser': xmlUser}
+                context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'titulo': titulo, 'respuesta': resp, 'ans': ans, 'xmlUser': xmlUser, 'acceso': acceso}
 
             return render(request, 'user.html', context)
+
             #if request.user.is_authenticated() and str(request.user.username) == str(usuario):
             #    print("Aquí tengo las configuraciones en la página de usuario(CSS)")
     except ObjectDoesNotExist:
@@ -432,9 +405,8 @@ def user(request, recurso):
         return HttpResponse(error)
 
 
-
 def about(request):
     intro = "Página realizada por Cayetana Gómez Casado."
     funcionamiento = "Aquí tienes las diferentes urls disponibles que te ayudarán a su correcto funcionamiento:"
-    context = {'intro': intro, 'funcionamiento': funcionamiento}
+    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'intro': intro, 'funcionamiento': funcionamiento}
     return render(request, 'about.html', context)

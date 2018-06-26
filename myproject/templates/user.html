@@ -1,8 +1,15 @@
 {% extends "index.html" %}
 
 {% block contenido %}
-  </br></br></br></br></br></br></br>
+</br></br></br></br></br></br></br>
   {{ titulo | safe}}
+    {% if acceso %}
+      <form action="/titulo_nuevo" method="POST">
+        <h3>Titulo:</h3>
+        <textarea name="Título" cols="30" rows="2"></textarea><br>
+        <input type="submit" value="Enviar">
+      </form>
+    {% endif %}
   {{respuesta | safe }}
   {{ ans | safe }}
 {% endblock %}
@@ -11,4 +18,9 @@
   <li id="active"><a href="/" id="current">Inicio</a></li>
   <li><a href="/museos">Todos</a></li>
   <li><a href="/about">About</a></li>
+{% endblock %}
+
+{% block usuarios %}
+  <h4><span class="menu_first_letter">Opciones</span></h4>
+  <li id="active"><a href="{{usuario}}/json" id="current">Json</a></li>
 {% endblock %}

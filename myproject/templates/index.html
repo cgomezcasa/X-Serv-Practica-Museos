@@ -22,18 +22,26 @@
 </div>
 
 <div id="header_right">
+  {% if autentificado %}
+    <form id="form1" method="post" action="/logout">
+      {% csrf_token %}
+      <p class="welcome">Bienvenid@: {{ usuario }}</p>
+      <input type="submit" class="submit_button" name="Submit" value="Logout" />
+    </form>
+  {% else %}
+    <p class="welcome">Bienvenid@. Por favor introduzca su usuario.</p>
 
-<p class="welcome">Bienvenido. Por favor introduzca su usuario.</p>
-
-  <form id="form1" method="post" action="">
-    <p><label>Username
-    <input type="text" class="fields" name="textfield" />
-    </label>
-    <label>Password
-    <input type="text" class="fields" name="textfield2" />
-    <input type="submit" class="submit_button" name="Submit" value="login" />
-    </label></p>
-  </form>
+    <form id="form1" method="post" action="/login">
+      {% csrf_token %}
+      <p><label>Username
+      <input type="text" class="fields" name="username" />
+      </label>
+      <label>Password
+      <input type="password" class="fields" name="password" />
+      <input type="submit" class="submit_button" name="Submit" value="Login" />
+      </label></p>
+    </form>
+  {% endif %}
   </div>
 
 </div>
@@ -47,7 +55,6 @@
 {% block menu %}{% endblock %}
 {% block usuarios %}{% endblock %}
 
-<!-- chacer un bloque igual que el de menu para usuarios registrados con un for... además revisar la página de delicious fruit y copiar sino la parte de usuarios que aparecía ahí-->
 </div>
 
 <div id="right">

@@ -37,7 +37,6 @@ FUENTE_CSS_DEFAULT = '62.5'
 COLOR_CSS_DEFAULT = 'white'
 
 def xmlParser(request):
-    print("Estoy en parser")
     xml_Url = "https://datos.madrid.es/portal/site/egob/menuitem.ac61933d6ee3c31cae77ae7784f1a5a0/?vgnextoid=00149033f2201410VgnVCM100000171f5a0aRCRD&format=xml&file=0&filename=201132-0-museos&mgmtid=118f2fdbecc63410VgnVCM1000000b205a0aRCRD&preview=full"
     page = urlopen(xml_Url)
     tree = ET.parse(page)
@@ -50,32 +49,26 @@ def xmlParser(request):
                 for k in j.iter('atributo'):
                     try:
                         idMuseo = k.find('[@nombre="ID-ENTIDAD"]').text
-                        print(idMuseo)
                     except AttributeError:
                         pass
                     try:
                         nombre = k.find('[@nombre="NOMBRE"]').text
-                        print(nombre)
                     except AttributeError:
                         pass
                     try:
                         descripcion = k.find('[@nombre="DESCRIPCION-ENTIDAD"]').text
-                        print(descripcion)
                     except AttributeError:
                         pass
                     try:
                         horario = k.find('[@nombre="HORARIO"]').text
-                        print(horario)
                     except AttributeError:
                         pass
                     try:
                         transporte = k.find('[@nombre="TRANSPORTE"]').text
-                        print(transporte)
                     except AttributeError:
                         pass
                     try:
                         accesibilidad = k.find('[@nombre="ACCESIBILIDAD"]').text
-                        print(accesibilidad)
                         if accesibilidad == '0':
                             "Mala";
                         else:
@@ -120,8 +113,21 @@ def xmlParser(request):
     return HttpResponse(formulario_carga)
 
 def style(request):
-    print('Estoy en style')
-    return HttpResponse(render(request, 'style.css'), content_type="text/css")
+    usuario = request.user.get_username()
+    estilo = Configuracion.objects.filter(usuario__username__contains=usuario)
+    if str(estilo) != '[]':
+        for i in estilo:
+            fuente = i.fuente
+            if str(fuente) == '':
+                fuente = FUENTE_CSS_DEFAULT
+            color = i.color
+            if str(color) == '':
+                color = COLOR_CSS_DEFAULT
+    else:
+        fuente = FUENTE_CSS_DEFAULT
+        color = COLOR_CSS_DEFAULT
+    context = {'fuente': fuente, 'color': color}
+    return HttpResponse(render(request, 'style.css', context), content_type="text/css")
 
 def notOption():
     resp = "No contemplada esta opción.</br>"
@@ -279,7 +285,6 @@ def museos_id(request,recurso):
         sel = True
         coment = False
         context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
-
     return render(request, 'museo_id.html', context)
 
 def mylogout(request):
@@ -318,7 +323,6 @@ def json_cod(museos):
     diccionario = {}
     diccionario['museos'] = []
     for i in museos:
-        print(i)
         elementos_json(diccionario['museos'], i)
     data = json.dumps(diccionario, indent=4)
     return data
@@ -350,6 +354,16 @@ def xml_cod(museos):
 
 @csrf_exempt
 def estiloUser(request):
+    print('me han enviado un cambio de fuente y color')
+    fuente  = request.POST['Fuente']
+    color = request.POST['Color']
+    usuario = request.user
+    try:
+        user_style = Configuracion.objects.get(usuario=usuario)
+        Configuracion.objects.filter(user__username=username).update(fuente = fuente, color = color)
+    except ObjectDoesNotExist:
+        user_style = Configuracion(fuente=fuente, color=color, usuario=usuario)
+        user_style.save()
     return HttpResponseRedirect('/')
 
 @csrf_exempt
@@ -358,46 +372,32 @@ def tituloUser(request):
     usuario = request.user
     try:
         user_titulo = Configuracion.objects.get(usuario=usuario)
-        user_titulo.delete()
+        Configuracion.objects.filter(user__username=username).update(titulo = titulo)
     except ObjectDoesNotExist:
-        pass;
-    user_titulo = Configuracion(titulo = titulo, usuario=usuario)
-    user_titulo.save()
+        user_titulo = Configuracion(titulo = titulo, usuario=usuario)
+        user_titulo.save()
     return HttpResponseRedirect('/')
 
-def get_configuracion(usuario):
-    estilo = Configuracion.objects.filter(usuario__username__contains=usuario)
-    print(estilo)
-    if str(estilo) != '[]':
-        for i in estilo:
+def get_titulo(usuario):
+    conf = Configuracion.objects.filter(usuario__username__contains=usuario)
+    if str(conf) != '[]':
+        for i in conf:
             titulo = i.titulo
             if str(titulo) == '':
                 titulo = '<h3>Página de ' + usuario + '</h3>'
             else:
                 titulo = '<h3>' + str(titulo) + '</h3>'
-            fuente = i.fuente
-            if str(fuente) == '':
-                fuente = FUENTE_CSS_DEFAULT
-            color = i.color
-            if str(color) == '':
-                color = COLOR_CSS_DEFAULT
     else:
         titulo = '<h3>Página de ' + usuario + '</h3>'
-        fuente = FUENTE_CSS_DEFAULT
-        color = COLOR_CSS_DEFAULT
-    print(titulo + ' ' + fuente + ' ' + color)
-    return(titulo,fuente, color)
-    #return HttpResponse(render(request, 'style.css', context), content_type="text/css")
+    return(titulo)
 
 @csrf_exempt
 def user(request, recurso):
     usuario = recurso.split('/')[0]
-    print('primer usuario:' + usuario)
     try:
         usuario_encontrado = User.objects.get(username=usuario)
-        print(usuario_encontrado)
         museos_usuario = Content_User.objects.filter(usuario__username__contains = usuario)
-        titulo,fuente,color = get_configuracion(usuario)
+        titulo = get_titulo(usuario)
         acceso = False
         if request.user.is_authenticated() and str(request.user.username) == str(usuario):
             acceso = True
@@ -436,15 +436,11 @@ def user(request, recurso):
                     resp += '</a></br><a href="/museos/' + str(objeto.museo.id) + '">' + "Más información" + '</a> (' + str(objeto.fecha) + ')'
                     resp += "</ul>"
                 context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'titulo': titulo, 'respuesta': resp, 'ans': ans, 'acceso': acceso, 'nombre': usuario}
-
             return render(request, 'user.html', context)
 
-            #if request.user.is_authenticated() and str(request.user.username) == str(usuario):
-            #    print("Aquí tengo las configuraciones en la página de usuario(CSS)")
     except ObjectDoesNotExist:
         error = notOption()
         return HttpResponse(error)
-
 
 def about(request):
     intro = "Página realizada por Cayetana Gómez Casado."

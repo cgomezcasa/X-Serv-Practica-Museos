@@ -17,6 +17,5 @@ urlpatterns = [
     url(r'^about$', 'museoApp.views.about'),
     url(r'^logout$', 'museoApp.views.mylogout'),
     url(r'^login$', 'museoApp.views.mylogin'),
-    url(r'^rss$', 'museoApp.views.canalRss'),
     url(r'^(.*)', 'museoApp.views.user'),
 ]

@@ -12,12 +12,6 @@ from django.contrib.auth import logout, login, authenticate
 from django.contrib.auth.models import User
 import json
 
-formulario_carga = """
-        <form action="/">
-          <h3>CARGAR DATOS:</h3>
-          <input type="submit" value="Cargar museos">
-        </form>
-        """
 formulario_comentario = """
         <form action="/comentario_nuevo" method="POST">
           <h3>Comentar:</h3>
@@ -41,76 +35,76 @@ def xmlParser(request):
     page = urlopen(xml_Url)
     tree = ET.parse(page)
     root = tree.getroot()
+    Museo.objects.all().delete()
 
     for i in root.iter('contenido'):
         try:
-            for j in i.iter('atributos'):
+            for k in i.findall('atributos'):
 
-                for k in j.iter('atributo'):
-                    try:
-                        idMuseo = k.find('[@nombre="ID-ENTIDAD"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        nombre = k.find('[@nombre="NOMBRE"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        descripcion = k.find('[@nombre="DESCRIPCION-ENTIDAD"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        horario = k.find('[@nombre="HORARIO"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        transporte = k.find('[@nombre="TRANSPORTE"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        accesibilidad = k.find('[@nombre="ACCESIBILIDAD"]').text
-                        if accesibilidad == '0':
-                            "Mala";
-                        else:
-                            "Buena";
-                    except AttributeError:
-                        pass
-                    try:
-                        url = k.find('[@nombre="CONTENT-URL"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        direccion = k.find('[@nombre="NOMBRE-VIA"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        barrio = k.find('[@nombre="BARRIO"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        distrito = k.find('[@nombre="DISTRITO"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        telefono = k.find('[@nombre="TELEFONO"]').text
-                    except AttributeError:
-                        pass
-                    try:
-                        email = k.find('[@nombre="EMAIL"]').text
-                    except AttributeError:
-                        pass
+                try:
+                    idMuseo = k.find('atributo[@nombre="ID-ENTIDAD"]').text
+                except AttributeError:
+                    pass
+                try:
+                    nombre = k.find('atributo[@nombre="NOMBRE"]').text
+                except AttributeError:
+                    pass
+                try:
+                    descripcion = k.find('atributo[@nombre="DESCRIPCION-ENTIDAD"]').text
+                except AttributeError:
+                    pass
+                try:
+                    horario = k.find('atributo[@nombre="HORARIO"]').text
+                except AttributeError:
+                    pass
+                try:
+                    transporte = k.find('atributo[@nombre="TRANSPORTE"]').text
+                except AttributeError:
+                    pass
+                try:
+                    accesibilidad = k.find('atributo[@nombre="ACCESIBILIDAD"]').text
+                    if accesibilidad == '0':
+                        "Mala";
+                    else:
+                        "Buena";
+                except AttributeError:
+                    pass
+                try:
+                    url = k.find('atributo[@nombre="CONTENT-URL"]').text
+                except AttributeError:
+                    pass
+                loc = k.find('atributo[@nombre="LOCALIZACION"]')
+                try:
+                    direccion = loc.find('atributo[@nombre="NOMBRE-VIA"]').text
+                except AttributeError:
+                    pass
+                try:
+                    barrio = loc.find('atributo[@nombre="BARRIO"]').text
+                except AttributeError:
+                    pass
+                try:
+                    distrito = loc.find('atributo[@nombre="DISTRITO"]').text
+                except AttributeError:
+                    pass
+                contacto = k.find('atributo[@nombre="DATOSCONTACTOS"]')
+                try:
+                    telefono = contacto.find('atributo[@nombre="TELEFONO"]').text
+                except AttributeError:
+                    pass
+
         except AttributeError:
-            continue
+            pass
 
         museo = Museo(idMuseo = idMuseo, nombre = nombre,
                       descripcion = descripcion, horario = horario,
                       transporte = transporte,  accesibilidad = accesibilidad,
                       url = url, direccion = direccion, barrio = barrio,
-                      distrito = distrito, telefono = telefono, email = email)
+                      distrito = distrito, telefono = telefono)
 
         museo.save()
+        idMuseo = nombre = descripcion = horario = transporte = accesibilidad = url = direccion = barrio = distrito = telefono = None
 
-    return HttpResponse(formulario_carga)
+    return render(request, 'cargar.html')
 
 def notOption():
     resp = "<h3>No contemplada esta opción.</h3></br>"
@@ -231,7 +225,7 @@ def museos_id(request,recurso):
     resp = '<h1>' + objeto.nombre + '</h1></br><h4>Descripción:</h4>' + objeto.descripcion +  '</br>'
     resp += '<h4>Horario:</h4>' + objeto.horario + '</br><h4>Transporte:</h4>' + objeto.transporte + '</br><h4>Accesibilidad:</h4>' + acc
     resp += '<h4>URL:</h4><a href="' + str(objeto.url) + '">' + objeto.url + '</a><h4>Dirección:</h4>' + objeto.direccion +'</br><h4>Barrio:</h4>' + objeto.barrio
-    resp += '</br><h4>Distrito:</h4>' + objeto.distrito +'</br><h4>Teléfono:</h4>' + objeto.telefono + '</br><h4>Email:</h4>' + objeto.email
+    resp += '</br><h4>Distrito:</h4>' + objeto.distrito +'</br><h4>Teléfono:</h4>' + objeto.telefono
     resp += '<h4>Comentarios:</h4>'
 
     comentarios = Comentario.objects.filter(museo__nombre__contains = objeto.nombre)
@@ -248,11 +242,11 @@ def museos_id(request,recurso):
         if request.user.is_authenticated():
             sel = True
             coment = True
-            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
+            context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
         else:
             sel = False
             coment = False
-            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
+            context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
 
     if request.method =='POST':
         user_seleccion = request.user
@@ -265,12 +259,22 @@ def museos_id(request,recurso):
 
         sel = True
         coment = False
-        context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
+        context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
     return render(request, 'museo_id.html', context)
 
 def mylogout(request):
     logout(request)
     return HttpResponseRedirect('/')
+
+def user_valido(usuario):
+    nombres = User.objects.all()
+    for i in nombres:
+        if usuario == i.username:
+            valido = False
+            break;
+        else:
+            valido = True
+    return valido
 
 @csrf_exempt
 def mylogin(request):
@@ -281,8 +285,13 @@ def mylogin(request):
         login(request, user)
         return HttpResponseRedirect('/')
     else:
-        #opcion registro de usuarios
-        return HttpResponseRedirect('/')
+        valido = user_valido(username)
+        if valido:
+            usuario_nuevo = User.objects.create_user(username = username,password = password)
+            return HttpResponseRedirect('/')
+        else:
+            return HttpResponseRedirect('/')
+
 
 def elementos_json(elementos, museo):
     elemento = {}
@@ -297,7 +306,6 @@ def elementos_json(elementos, museo):
     elemento['barrio'] = museo.museo.barrio
     elemento['distrito'] = museo.museo.distrito
     elemento['telefono'] = museo.museo.telefono
-    elemento['email'] = museo.museo.email
     elementos.append(elemento)
 
 def json_cod(museos):
@@ -324,7 +332,6 @@ def insertar_museo_xml(child, museo):
     insertar_atributo_xml(child, "BARRIO", museo.barrio)
     insertar_atributo_xml(child, "DISTRITO", museo.distrito)
     insertar_atributo_xml(child, "TELEFONO", str(museo.telefono))
-    insertar_atributo_xml(child, "EMAIL", str(museo.email))
 
 def xml_cod(museos):
     root = ET.Element('Contenidos')
@@ -439,11 +446,6 @@ def style(request):
         color = COLOR_CSS_DEFAULT
     context = {'fuente': fuente, 'color': color}
     return HttpResponse(render(request, 'style.css', context), content_type="text/css")
-
-def canalRss(request):
-    comentarios = Comentario.objects.all()
-    context = {'comentarios': comentarios}
-    return HttpResponse(render(request, 'comentarios.rss', context), content_type="text/rss+xml")
 
 def about(request):
     context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated()}

@@ -1,0 +1,17 @@
+{% extends "index.html" %}
+
+
+{% block menu %}
+  <li id="active"><a href="/" id="current">Inicio</a></li>
+  <li class="green"><a href="/museos">Todos</a></li>
+  <li><a href="/about">About</a></li>
+{% endblock %}
+
+{% block options %}
+    </br></br></br></br></br></br></br></br></br>
+    <form action="/">
+      <h3>CARGAR DATOS:</h3>
+      <input type="submit" value="Cargar museos">
+    </form>
+
+{% endblock %}

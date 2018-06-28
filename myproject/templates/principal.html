@@ -1,6 +1,7 @@
 {% extends "index.html" %}
 
    {% block contenido %}
+      </br></br></br>
       {% if acceso %}
         {{ filtro_acc|safe }}
       {% else %}
@@ -37,4 +38,5 @@
     <li id="active"></li>
     <li class="green"><a href="/museos" id="current">Todos</a></li>
     <li><a href="/about">About</a></li>
+    <li><a href="/cargar">Cargar</a></li>
   {% endblock %}

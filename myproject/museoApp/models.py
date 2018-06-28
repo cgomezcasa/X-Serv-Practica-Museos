@@ -13,7 +13,6 @@ class Museo(models.Model):
     barrio = models.CharField(max_length=32, null=True)
     distrito = models.CharField(max_length=32, null=True)
     telefono = models.CharField(max_length=32, null=True)
-    email = models.EmailField(max_length=64, null=True)
     def __str__(self):
         return self.nombre
 
@@ -21,7 +20,6 @@ class Content_User(models.Model):
     museo = models.ForeignKey(Museo)
     usuario = models.ForeignKey(User)
     fecha = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-    #contador = models.IntegerField(null=True)
     def __str__(self):
         return self.usuario.username
 

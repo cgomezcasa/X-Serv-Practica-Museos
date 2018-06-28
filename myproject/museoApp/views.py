@@ -354,13 +354,12 @@ def xml_cod(museos):
 
 @csrf_exempt
 def estiloUser(request):
-    print('me han enviado un cambio de fuente y color')
-    fuente  = request.POST['Fuente']
-    color = request.POST['Color']
+    fuente  = request.POST["fuente"]
+    color = request.POST["color"]
     usuario = request.user
     try:
         user_style = Configuracion.objects.get(usuario=usuario)
-        Configuracion.objects.filter(user__username=username).update(fuente = fuente, color = color)
+        Configuracion.objects.filter(usuario__username=usuario).update(fuente = fuente, color = color)
     except ObjectDoesNotExist:
         user_style = Configuracion(fuente=fuente, color=color, usuario=usuario)
         user_style.save()
@@ -368,11 +367,11 @@ def estiloUser(request):
 
 @csrf_exempt
 def tituloUser(request):
-    titulo  = request.POST['Título']
+    titulo  = request.POST["título"]
     usuario = request.user
     try:
         user_titulo = Configuracion.objects.get(usuario=usuario)
-        Configuracion.objects.filter(user__username=username).update(titulo = titulo)
+        Configuracion.objects.filter(usuario__username=usuario).update(titulo = titulo)
     except ObjectDoesNotExist:
         user_titulo = Configuracion(titulo = titulo, usuario=usuario)
         user_titulo.save()
@@ -413,7 +412,7 @@ def user(request, recurso):
 
             num_museos = len(museos_usuario)
             n_paginas = int((num_museos / 5) + 1 )
-            ans = "</br> Páginas disponibles:</br>"
+            ans = ""
             for i in range(1,n_paginas+1):
                  ans += formulario_pagina.format(i,i)
 

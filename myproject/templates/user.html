@@ -5,13 +5,25 @@
 
     {% if acceso %}
       <form action="/titulo_nuevo" method="POST">
+        {% csrf_token %}
         <h3>Titulo:</h3>
-        <textarea name="Nuevo título:" cols="30" rows="2"></textarea><br>
+        <textarea name="título" cols="30" rows="2"></textarea><br>
         <input type="submit" value="Enviar">
       </form>
+
+      <h3>Cambio estilo:</h3></br>
+         <form action="/estilo_nuevo" method="POST">
+           {% csrf_token %}
+           <h4>Fuente</h4>
+              <input class="textbox" type="text" name="fuente" value="62.5">
+           <h4>Color</h4>
+             <input class="textbox" type="text" name="color" value="white"></br></br>
+             <input class="boton" type="submit" value="Enviar"></br></br></br>
+         </form>
     {% endif %}
 
   {{respuesta | safe }}
+  <h3> Páginas disponibles:</h3>
   {{ ans | safe }}
 
 {% endblock %}

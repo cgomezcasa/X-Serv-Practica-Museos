@@ -5,8 +5,6 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'cargar$', 'museoApp.views.xmlParser'),
     url(r'^$', 'museoApp.views.pagina_principal'),
-    url(r'^json/(.*)$', 'museoApp.views.json_cod'),
-    url(r'^xml/(.*)$', 'museoApp.views.xml_cod'),
     url(r'^museos$', 'museoApp.views.museos'),
     url(r'^museos/(\d+)$', 'museoApp.views.museos_id'),
     url(r'^acceso$', 'museoApp.views.filtro_accesibilidad'),

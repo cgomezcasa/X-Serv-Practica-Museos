@@ -130,11 +130,10 @@ def style(request):
     return HttpResponse(render(request, 'style.css', context), content_type="text/css")
 
 def notOption():
-    resp = "No contemplada esta opción.</br>"
-    resp +="Quizás pueda ayudarte la siguiente página: </br>"
-    resp += '<li><a href="/about">' + 'Página con la auditoría y el funcionamiento.' + '</a></br>'
-    resp += "</ul>"
-    return (resp)
+    resp = "<h3>No contemplada esta opción.</h3></br>"
+    resp +="Quizás pueda ayudarte la página About.</br>"
+    resp +="Pinchando en Inicio podrás acceder a About."
+    return(resp)
 
 def get_museos_comentados(lista):
     resp = ""
@@ -155,7 +154,6 @@ def get_museos_seleccionados(lista):
     return (resp)
 
 def pagina_principal(request):
-
     if request.method == 'GET':
         museos_seleccionados = Content_User.objects.annotate(num_sel=Count('museo')).filter(num_sel__gte=1).order_by('-num_sel')[:5]
         try:
@@ -333,15 +331,15 @@ def insertar_atributo_xml(child, atributo, valor):
 
 def insertar_museo_xml(child, museo):
     insertar_atributo_xml(child, "ID-ENTIDAD", str(museo.idMuseo))
-    insertar_atributo_xml(child, "NOMBRE", str(museo.nombre))
+    insertar_atributo_xml(child, "NOMBRE", museo.nombre)
     insertar_atributo_xml(child, "DESCRIPCION-ENTIDAD", str(museo.descripcion))
     insertar_atributo_xml(child, "HORARIO", str(museo.horario))
     insertar_atributo_xml(child, "TRANSPORTE", str(museo.transporte))
     insertar_atributo_xml(child, "ACCESIBILIDAD", str(museo.accesibilidad))
     insertar_atributo_xml(child, "CONTENT-URL", str(museo.url))
     insertar_atributo_xml(child, "NOMBRE-VIA", str(museo.direccion))
-    insertar_atributo_xml(child, "BARRIO", str(museo.barrio))
-    insertar_atributo_xml(child, "DISTRITO", str(museo.distrito))
+    insertar_atributo_xml(child, "BARRIO", museo.barrio)
+    insertar_atributo_xml(child, "DISTRITO", museo.distrito)
     insertar_atributo_xml(child, "TELEFONO", str(museo.telefono))
     insertar_atributo_xml(child, "EMAIL", str(museo.email))
 
@@ -439,10 +437,9 @@ def user(request, recurso):
 
     except ObjectDoesNotExist:
         error = notOption()
-        return HttpResponse(error)
+        context = {'error': error}
+        return render(request, 'error.html', context)
 
 def about(request):
-    intro = "Página realizada por Cayetana Gómez Casado."
-    funcionamiento = "Aquí tienes las diferentes urls disponibles que te ayudarán a su correcto funcionamiento:"
-    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'intro': intro, 'funcionamiento': funcionamiento}
+    context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated()}
     return render(request, 'about.html', context)

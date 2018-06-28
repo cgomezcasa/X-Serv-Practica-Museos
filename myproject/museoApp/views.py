@@ -112,23 +112,6 @@ def xmlParser(request):
 
     return HttpResponse(formulario_carga)
 
-def style(request):
-    usuario = request.user.get_username()
-    estilo = Configuracion.objects.filter(usuario__username__contains=usuario)
-    if str(estilo) != '[]':
-        for i in estilo:
-            fuente = i.fuente
-            if str(fuente) == '':
-                fuente = FUENTE_CSS_DEFAULT
-            color = i.color
-            if str(color) == '':
-                color = COLOR_CSS_DEFAULT
-    else:
-        fuente = FUENTE_CSS_DEFAULT
-        color = COLOR_CSS_DEFAULT
-    context = {'fuente': fuente, 'color': color}
-    return HttpResponse(render(request, 'style.css', context), content_type="text/css")
-
 def notOption():
     resp = "<h3>No contemplada esta opción.</h3></br>"
     resp +="Quizás pueda ayudarte la página About.</br>"
@@ -439,6 +422,28 @@ def user(request, recurso):
         error = notOption()
         context = {'error': error}
         return render(request, 'error.html', context)
+
+def style(request):
+    usuario = request.user.get_username()
+    estilo = Configuracion.objects.filter(usuario__username__contains=usuario)
+    if str(estilo) != '[]':
+        for i in estilo:
+            fuente = i.fuente
+            if str(fuente) == '':
+                fuente = FUENTE_CSS_DEFAULT
+            color = i.color
+            if str(color) == '':
+                color = COLOR_CSS_DEFAULT
+    else:
+        fuente = FUENTE_CSS_DEFAULT
+        color = COLOR_CSS_DEFAULT
+    context = {'fuente': fuente, 'color': color}
+    return HttpResponse(render(request, 'style.css', context), content_type="text/css")
+
+def canalRss(request):
+    comentarios = Comentario.objects.all()
+    context = {'comentarios': comentarios}
+    return HttpResponse(render(request, 'comentarios.rss', context), content_type="text/rss+xml")
 
 def about(request):
     context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated()}

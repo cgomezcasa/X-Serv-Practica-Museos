@@ -1,0 +1,19 @@
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<rss version="2.0">
+  <channel>
+
+    <title>Comentarios RSS</title>
+    <link>http://127.0.0.1:8000/museos</link>
+    <description>Museos comentados.</description>
+    {% for i in comentarios %}
+      <item>
+
+        <title>{{i.museo.nombre}}</title>
+        <link>http://127.0.0.1:8000/museos/{{i.museo.id}}</link>
+        <description>{{i.comentario}}</description>
+
+      </item>
+    {% endfor %}
+  </channel>
+</rss>

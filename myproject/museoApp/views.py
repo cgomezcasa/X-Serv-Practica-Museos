@@ -102,7 +102,6 @@ def xmlParser(request):
                       distrito = distrito, telefono = telefono)
 
         museo.save()
-        idMuseo = nombre = descripcion = horario = transporte = accesibilidad = url = direccion = barrio = distrito = telefono = None
 
     return render(request, 'cargar.html')
 
@@ -242,11 +241,11 @@ def museos_id(request,recurso):
         if request.user.is_authenticated():
             sel = True
             coment = True
-            context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
+            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment, 'form': formulario_comentario.format(objeto.nombre)}
         else:
             sel = False
             coment = False
-            context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
+            context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
 
     if request.method =='POST':
         user_seleccion = request.user
@@ -259,7 +258,7 @@ def museos_id(request,recurso):
 
         sel = True
         coment = False
-        context = {'id': id_museo, 'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
+        context = {'usuario': request.user.username, 'autentificado': request.user.is_authenticated(), 'respuesta': resp, 'seleccion': sel, 'comentar': coment}
     return render(request, 'museo_id.html', context)
 
 def mylogout(request):
